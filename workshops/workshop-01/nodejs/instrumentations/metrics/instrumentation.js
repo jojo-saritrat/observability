@@ -18,8 +18,7 @@ const sdk = new NodeSDK({
   metricReader: prometheusExporter,
   instrumentations: [
     // เปิดใช้การติดตาม HTTP requests อัตโนมัติ
-    new HttpInstrumentation(),
-    new ExpressInstrumentation(),
+    new HttpInstrumentation()
   ],
 });
 
