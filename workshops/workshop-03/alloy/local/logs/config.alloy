@@ -1,0 +1,158 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+livedebugging {
+  enabled = true
+}
+
+
+// --------------------------------------------   Receivers/Discovery
+// Local file matcher for host logs
+
+// local.file "secret_key" {
+//   filename  = "/tmp/txt/text.log"
+//   is_secret = false
+// }
+
+local.file_match "node_logs" {
+  path_targets = [{
+    __path__  = "/tmp/logs/*.log",
+  }]
+}
+
+
+// Loki source for file-based logs
+// loki.source.file "node_logs" {
+//   targets = [
+//     {"__path__" = "/tmp/txt/text.log"},
+//   ]
+//   forward_to   = [loki.process.filter_logs.receiver]
+//   tail_from_end = true
+// }
+
+// --------------------------------------------  Sources
+// Loki source for file-based logs
+loki.source.file "node_logs" {
+  targets      = local.file_match.node_logs.targets
+  forward_to   = [loki.process.filter_logs.receiver]
+  // forward_to   = [loki.relabel.router.receiver]
+  tail_from_end = true
+}
+
+
+// ใช้ loki.relabel เพื่อตรวจสอบและติดป้าย (label) ให้กับแต่ละ log line
+// loki.relabel "router" {
+//   // ส่งต่อไปยัง Process block ทั้งสองที่
+//   forward_to = [
+//     // loki.process.json_process.receiver,
+//     // loki.process.text_process.receiver,
+//     loki.process.filter_logs.receiver,
+//   ]
+
+//   // กฎข้อที่ 1: ตรวจหา JSON
+//   // ถ้า log line ขึ้นต้นด้วย '{' และลงท้ายด้วย '}'
+//   rule {
+//     source_labels = ["__log_line__"] // ใช้ internal label ที่เก็บเนื้อหา log
+//     regex         = `^\{.*\}$`       // Regex ตรวจสอบ JSON
+//     action        = "replace"
+//     target_label  = "__tmp_log_format" // สร้าง label ชั่วคราวขึ้นมา
+//     replacement   = "json"             // กำหนดค่าให้เป็น "json"
+//   }
+// }
+
+// loki.echo "example" { }
+
+
+otelcol.exporter.debug "showme" {
+}
+
+// --------------------------------------------  Processors
+// Loki process for filtering logs
+loki.process "filter_logs" {
+  // stage.pack {
+  //   labels = ["level", "msg"]
+  // }
+  // stage.cri {}
+  stage.json {
+    expressions = { 
+      "level" = "level", 
+      "message" = "msg",
+    } // สร้าง fields level และ msg จาก log ที่ได้
+  }
+  stage.labels {
+    values = { 
+      "level" = "level",
+      "message" = "message",
+    }
+  }
+
+  stage.structured_metadata {
+    values = {
+      level  = "level",      
+      msg = "message",
+    }
+  }
+
+  stage.output {
+    source = "message"
+  }
+
+  // stage.static_labels {
+  //   values = {
+  //     "service" = "kai",// เพิ่ม service field เองได้ที่นี่
+  //   }
+  // }
+  // stage.logfmt {
+  //   mapping = {
+  //     "lvl" = "level",
+  //     "message" = "msg", 
+  //   }
+  // }
+  // stage.output {
+  //   source = "logfmt"
+  // }
+  // stage.static_labels {
+  //   values = {
+  //     "service" = "nongkai",
+  //     "test" = "aaa",
+  //   }
+  // }
+
+  // stage.labels {
+  //   values = {
+  //     lvl  = "level",         // Sets up an 'env' label, based on the 'env' extracted value.
+  //     message = "msg", // Sets up a 'user' label, based on the 'username' extracted value.
+  //   }
+  // }
+  // stage.drop {
+  //     expression  = ".*debug.*"
+  //     longer_than = "1KB"
+  // }
+  // stage.logfmt {
+  //   mapping = {
+  //     "info" = "INFO",
+  //   }
+  //   source = "msg"
+  // }
+  
+  // stage.drop {
+  //   source              = ""
+  //   expression          = ".*Connection closed by authenticating user root"
+  //   drop_counter_reason = "noisy"
+  // }
+  // stage.output {
+  //   source = "extracted"
+  // }
+  forward_to = [loki.write.grafana_loki.receiver]
+}
+
+
+// --------------------------------------------   Exporters
+// Loki write to Grafana Loki
+loki.write "grafana_loki" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

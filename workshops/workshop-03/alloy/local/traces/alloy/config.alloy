@@ -1,0 +1,42 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+livedebugging {
+  enabled = true
+}
+
+otelcol.receiver.otlp "default" {
+  grpc {}
+  http {
+    
+  }
+
+  output {
+    traces  = [otelcol.connector.servicegraph.default.input]
+  }
+}
+
+
+// Ref: https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.connector.servicegraph/
+otelcol.connector.servicegraph "default" {
+  dimensions = ["http.method"]
+  output {
+    metrics  = [otelcol.exporter.prometheus.default.input]
+  }
+}
+
+// // ตั้งค่า Endpoint สำหรับ Prometheus Scrape Service Graph Metrics
+// otelcol.exporter.prometheus "servicegraph_endpoint" {
+//   forward_to = []
+// }
+
+prometheus.remote_write "default" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+  }
+}
+otelcol.exporter.prometheus "default" {
+  forward_to = [prometheus.remote_write.default.receiver]
+}

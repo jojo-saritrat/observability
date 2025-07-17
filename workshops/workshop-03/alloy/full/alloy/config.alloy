@@ -1,0 +1,72 @@
+// alloy/config.alloy
+
+// เปิดใช้งาน UI และ API ของ Alloy ที่ port 12345
+// http {
+//     listen_address = "0.0.0.0:12345"
+// }
+
+// --- 1. Exporters (ปลายทางสำหรับส่งข้อมูล) ---
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+    tls { insecure = true }
+  }
+}
+prometheus.remote_write "mimir" {
+  endpoint { url = "http://mimir:9009/api/v1/write" }
+}
+loki.write "loki" {
+  endpoint { url = "http://loki:3100/loki/api/v1/push" }
+}
+
+
+// --- 2. Metrics Pipeline ---
+// ดึงข้อมูล Host Metrics จาก node-exporter
+prometheus.scrape "node_exporter" {
+  targets = [{
+    "__address__" = "node-exporter:9100",
+  }]
+  forward_to = [prometheus.remote_write.mimir.receiver]
+}
+
+
+// --- 3. Traces Pipeline (Beyla) ---
+// ใช้ eBPF ดักจับข้อมูลจากแอปพลิเคชันจำลอง
+beyla.ebpf "app_apm" {
+  discovery {
+    services {
+      open_ports = "8080"
+      name = "python-server"
+    }
+  }
+  // ส่ง Traces ไปที่ connector เพื่อสร้าง Service Graph metrics
+  // และส่ง Traces ต้นฉบับไปที่ Tempo
+  output {
+    traces  = []
+  }
+}
+
+
+// --- 4. Service Graph Pipeline (รูปแบบที่ถูกต้อง) ---
+// ใช้ Connector ตัวเดียวในการรับ Traces และสร้าง Metrics
+// otelcol.connector.spanmetrics "main" {
+//   // ส่ง metrics ที่สร้างขึ้นไปยัง Mimir
+//   output {
+//     metrics = [prometheus.remote_write.mimir.receiver]
+//   }
+// }
+
+
+// --- 5. Logs Pipeline ---
+
+// ✅ ขั้นตอน A: ใช้ discovery.docker เพื่อค้นหา container ที่มี label 'app'
+discovery.docker "linux" {
+  host = "unix:///var/run/docker.sock"
+}
+
+loki.source.docker "default" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.docker.linux.targets
+  labels     = {"app" = "docker"}
+  forward_to = [loki.write.loki.receiver]
+}
