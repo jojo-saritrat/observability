@@ -1,24 +1,24 @@
 // Ref: https://grafana.com/docs/alloy/latest/reference/config-blocks/logging
 logging {
-  level  = "info"
-  format = "logfmt"
+	level  = "info"
+	format = "logfmt"
 }
 
 // Ref: https://grafana.com/docs/alloy/latest/reference/config-blocks/livedebugging
 livedebugging {
-  enabled = true
+	enabled = true
 }
 
 // Ref: https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.unix
-prometheus.exporter.unix "local_system" { 
-  // cpu {
-  //   info = true
-  // }
+prometheus.exporter.unix "local_system" {
+	// cpu {
+	//   info = true
+	// }
 }
 
 // Ref: https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.scrape
 prometheus.scrape "scrape_metrics" {
-  targets         = prometheus.exporter.unix.local_system.targets
-  forward_to      = []
-  scrape_interval = "10s"
+	targets         = prometheus.exporter.unix.local_system.targets
+	forward_to      = []
+	scrape_interval = "10s"
 }

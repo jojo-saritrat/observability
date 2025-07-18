@@ -1,0 +1,2 @@
+level=info msg="Application starting"
+level=info msg="Hi"

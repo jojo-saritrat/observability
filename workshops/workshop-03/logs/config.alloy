@@ -1,0 +1,61 @@
+logging {
+	level  = "info"
+	format = "logfmt"
+}
+
+livedebugging {
+	enabled = true
+}
+
+// --------------------------------------------   Receivers/Discovery
+// Local file matcher for host logs
+// Ref: https://grafana.com/docs/alloy/latest/reference/components/local/local.file_match
+local.file_match "node_logs" {
+	path_targets = [{
+		__path__ = "/tmp/logs/*.log",
+	}]
+}
+
+// --------------------------------------------  Sources
+// Loki source for file-based logs
+// Ref: https://grafana.com/docs/alloy/latest/reference/components/loki/loki.source.file
+loki.source.file "node_logs" {
+	targets    = local.file_match.node_logs.targets
+	forward_to = [loki.process.filter_logs.receiver]
+	// forward_to   = [loki.relabel.router.receiver]
+	tail_from_end = true
+}
+
+//
+// --------------------------------------------  Processors
+// Loki process for filtering logs
+// Ref: https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process
+loki.process "filter_logs" {
+
+	stage.json {
+		expressions = {
+			"level"   = "level",
+			"message" = "msg",
+		} // สร้าง fields level และ msg จาก log ที่ได้
+	}
+
+	stage.labels {
+		values = {
+			"level"   = "level",
+			"message" = "message",
+		}
+	}
+
+	stage.structured_metadata {
+		values = {
+			level = "level",
+			msg   = "message",
+		}
+	}
+
+	stage.output {
+		source = "message"
+	}
+
+	forward_to = []
+}
