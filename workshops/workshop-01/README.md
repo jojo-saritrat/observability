@@ -1,5 +1,7 @@
 # Introduction to Metrics, Logs, Traces and Profiles in Grafana
 
+!["LGTM Diagram"](../../images/LGTM-goal.png)
+
 ## Prerequisites
 
 The following demonstration environment requires:
