@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: observability-app
+  labels:
+    app: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: observability
+  template:
+    metadata:
+      labels:
+        app: observability
+    spec:
+      containers:
+        - name: observability
+          image: anonja/observability:1.0.0
+          ports:
+            - containerPort: 3031
+            - containerPort: 4318

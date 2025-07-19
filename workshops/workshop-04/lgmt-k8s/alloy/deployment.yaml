@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alloy
+  labels:
+    app: alloy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alloy
+  template:
+    metadata:
+      labels:
+        app: alloy
+    spec:
+      containers:
+        - name: alloy
+          image: grafana/alloy:v1.8.2
+          args:
+            - "run"
+            - "--server.http.listen-addr=0.0.0.0:12345"
+            - "--storage.path=/var/lib/alloy/data"
+            - "/etc/alloy/config.alloy"
+          ports:
+            - containerPort: 12345
+            - containerPort: 4317
+            - containerPort: 4318
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/alloy/config.alloy
+              subPath: config.alloy
+            - name: logs-volume
+              mountPath: /temp/logs
+      volumes:
+        - name: config-volume
+          configMap:
+            name: alloy-config
+        - name: logs-volume
+          emptyDir: {}
