@@ -1,7 +1,7 @@
 // instrumentation.js
 const { NodeSDK } = require('@opentelemetry/sdk-node');
 const {
-  ConsoleLogRecordExporter, // ✅ Exporter สำหรับพิมพ์ออก Console
+  ConsoleLogRecordExporter, // Exporter สำหรับพิมพ์ออก Console
   SimpleLogRecordProcessor,
 } = require('@opentelemetry/sdk-logs');
 const { HttpInstrumentation } = require('@opentelemetry/instrumentation-http');

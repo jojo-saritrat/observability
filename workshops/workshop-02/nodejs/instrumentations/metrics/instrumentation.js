@@ -1,7 +1,6 @@
 // instrumentation.js
 
 const { NodeSDK } = require('@opentelemetry/sdk-node');
-const { ExpressInstrumentation } = require('@opentelemetry/instrumentation-express');
 const { HttpInstrumentation } = require('@opentelemetry/instrumentation-http');
 const { PrometheusExporter } = require('@opentelemetry/exporter-prometheus');
 
