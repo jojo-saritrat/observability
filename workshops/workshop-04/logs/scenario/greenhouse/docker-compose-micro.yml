@@ -1,0 +1,97 @@
+version: '3'
+
+services:
+  user_service:
+    build: .
+    command: python user_service.py
+    ports:
+      - "5001:5001"
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - loki-fundamentals_loki
+
+  plant_service:
+    build: .
+    command: python plant_service.py
+    ports:
+      - "5002:5002"
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - loki-fundamentals_loki
+
+  simulation_service:
+    build: .
+    command: python simulation_service.py
+    ports:
+      - "5003:5003"
+    depends_on:
+      - db
+      - plant_service
+    restart: unless-stopped
+    networks:
+      - loki-fundamentals_loki
+
+  websocket_service:
+    build: .
+    command: python websocket_service.py
+    ports:
+      - "5004:5004"
+    restart: unless-stopped
+    networks:
+      - loki-fundamentals_loki
+
+  bug_service:
+    build: .
+    command: python bug_service.py
+    ports:
+      - "5010:5010"
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - loki-fundamentals_loki
+
+  main_app:
+    build: .
+    command: python main_app.py
+    ports:
+      - "5005:5000"
+    depends_on:
+      - user_service
+      - plant_service
+      - simulation_service
+      - websocket_service
+    restart: unless-stopped
+    networks:
+      - loki-fundamentals_loki
+
+  db:
+    image: postgres:12
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      PGOPTIONS: "-c log_statement=all -c log_connections=on -c log_disconnections=on"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - loki-fundamentals_loki
+
+volumes:
+  pgdata:
+
+networks:
+    loki-fundamentals_loki:
+      external: true

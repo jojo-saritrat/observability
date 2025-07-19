@@ -1,0 +1,111 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    /* Remove flex layout so the page can scroll */
+    background-image: url('/static/wallpaper.png'), linear-gradient(to bottom, rgba(255,255,255,1), rgba(255,255,255,0));
+    background-repeat: repeat;
+    background-size: 200px 200px;
+    background-color: #FFFFFF;
+    font-family: 'Indie Flower', cursive;
+}
+
+body {
+    /* If you want to limit the body width and center it horizontally: */
+    max-width: 600px;
+    margin: 0 auto;
+    /* Do NOT use align-items or justify-content here. */
+    /* The default display is block, which allows normal page flow and scrolling. */
+}
+
+.container {
+    text-align: center;
+    width: 100%;
+}
+
+.header {
+    background-color: #52734D;
+    color: white;
+    margin-bottom: 30px;
+    padding: 20px;
+    text-align: center;
+    font-size: 30px;
+    border-radius: 0 0 10px 10px;
+    width: 100%;
+}
+
+a {
+    display: inline-block;
+    margin: 5px;
+    padding: 10px 15px;
+    background-color: #789c74;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+a:hover, a:focus {
+    background-color: #567256;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background-color: #6AA84F;
+    border-color: #6AA84F;
+}
+
+.btn-primary:hover {
+    background-color: #458C28;
+    border-color: #458C28;
+}
+
+.form-control {
+    border-radius: 5px;
+}
+
+.index-image {
+    width: 100%; /* Makes the image responsive */
+    max-width: 600px; /* Adjust based on your layout */
+    display: block; /* Removes bottom space */
+    margin-bottom: 30px; /* Space between the image and the text */
+}
+
+.content-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    text-align: center;
+    margin: 20px auto;
+    width: 100%;
+    max-width: 600px; /* Or adjust as needed */
+}
+
+#plants-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    padding: 5px;
+}
+
+.plant-container {
+    background-color: white;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.plant-container img {
+    max-width: 100%;
+    height: auto;
+}
+
+
+@media (max-width: 800px) {
+    #plants-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
