@@ -22,7 +22,6 @@ local.file_match "node_logs" {
 loki.source.file "node_logs" {
 	targets    = local.file_match.node_logs.targets
 	forward_to = [loki.process.filter_logs.receiver]
-	// forward_to   = [loki.relabel.router.receiver]
 	tail_from_end = true
 }
 
