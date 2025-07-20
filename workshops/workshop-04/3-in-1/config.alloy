@@ -1,0 +1,125 @@
+logging {
+	level  = "info"
+	format = "logfmt"
+}
+
+livedebugging {
+	enabled = true
+}
+
+
+otelcol.receiver.otlp "otlp" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    logs   = [otelcol.processor.batch.default.input]
+    traces = [otelcol.processor.batch.default.input]
+    metrics = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.processor.batch "default" {
+  output {
+    logs    = [otelcol.exporter.otlp.loki.input]
+    traces  = [otelcol.exporter.otlp.tempo.input]
+    metrics = [otelcol.exporter.otlp.mimir.input]
+  }
+}
+
+local.file_match "node_logs" {
+	path_targets = [{
+		__path__ = "/tmp/logs/*.log",
+	}]
+}
+
+// --------------------------------------------  Sources
+// Loki source for file-based logs
+loki.source.file "node_logs" {
+	targets    = local.file_match.node_logs.targets
+	forward_to = [loki.process.filter_logs.receiver]
+	// forward_to   = [loki.relabel.router.receiver]
+	tail_from_end = true
+}
+
+//
+// --------------------------------------------  Processors
+// Loki process for filtering logs
+loki.process "filter_logs" {
+
+	stage.json {
+		expressions = {
+			"level"   = "level",
+			"message" = "msg",
+		} // สร้าง fields level และ msg จาก log ที่ได้
+	}
+
+	stage.labels {
+		values = {
+			"level"   = "level",
+			"message" = "message",
+		}
+	}
+
+	stage.structured_metadata {
+		values = {
+			level = "level",
+			msg   = "message",
+		}
+	}
+
+	stage.output {
+		source = "message"
+	}
+
+	forward_to = [loki.write.grafana_loki.receiver]
+}
+
+prometheus.scrape "node_exporter" {
+  targets = [{
+    "__address__" = "localhost:8080",
+  }]
+  forward_to = [prometheus.remote_write.mimir.receiver]
+}
+
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+    tls { insecure = true }
+  }
+}
+prometheus.remote_write "mimir" {
+  endpoint { url = "http://mimir:9009/api/v1/write" }
+}
+
+
+otelcol.exporter.otlp "loki" {
+  client {
+    endpoint = "loki:3100"
+    tls {
+      insecure = true
+    }
+  }
+}
+otelcol.exporter.otlp "mimir" {
+  client {
+    endpoint = "mimir:9009"
+    tls {
+      insecure = true
+    }
+  }
+}
+
+
+// --------------------------------------------   Exporters
+// Loki write to Grafana Loki
+loki.write "grafana_loki" {
+	endpoint {
+		url = "http://loki:3100/loki/api/v1/push"
+	}
+}

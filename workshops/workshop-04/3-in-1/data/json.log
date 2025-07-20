@@ -1,0 +1,3 @@
+{"level":"error", "service":"auth", "msg":"Login failed"}
+{"level":"info", "service":"auth", "msg":"Login susccess"}
+{"level":"debug", "service":"auth", "msg":"Debug Log"}
