@@ -10,9 +10,15 @@ const { ExpressInstrumentation } = require('@opentelemetry/instrumentation-expre
 const { PinoInstrumentation } = require('@opentelemetry/instrumentation-pino');
 
 // 1. สร้าง Exporter สำหรับแต่ละ Signal (ทั้งหมดชี้ไปที่ OTLP endpoint เดียวกัน)
-const traceExporter = new OTLPTraceExporter();
-const metricExporter = new OTLPMetricExporter();
-const logExporter = new OTLPLogExporter();
+const traceExporter = new OTLPTraceExporter({
+  url: 'http://localhost:4318/v1/traces',
+});
+const metricExporter = new OTLPMetricExporter({
+  url: 'http://localhost:4318/v1/metrics',
+});
+const logExporter = new OTLPLogExporter({
+  url: 'http://localhost:4318/v1/logs',
+});
 
 // 2. สร้าง MetricReader (สำหรับ Metrics) และ LogProcessor (สำหรับ Logs)
 const metricReader = new PeriodicExportingMetricReader({
