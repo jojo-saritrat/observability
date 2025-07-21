@@ -1,18 +1,55 @@
 apiVersion: 1
 
 datasources:
-  - name: Mimir
-    type: prometheus
-    access: grafanet
-    url: http://mimir:9009/prometheus
-    isDefault: true
   - name: Loki
     type: loki
+    uid: loki
     access: grafanet
     url: http://loki:3100
+    isDefault: true
+    jsonData:
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: '"trace[_]?[[iI][dD]":\s*"([a-f0-9]+)"'
+          name: traceId
+          url: '$${__value.raw}'
+  - name: Mimir
+    type: prometheus
+    uid: mimir
+    access: grafanet
+    url: http://mimir:9009/prometheus
+    jsonData:
+      exemplarTraceIdDestinations:
+        - datasourceUid: tempo
+          name: traceID
+      httpMethod: POST
+      timeInterval: "2s"
+  # Ref: https://grafana.com/docs/grafana/latest/datasources/tempo/configure-tempo-data-source/ 
   - name: Tempo
     type: tempo
+    uid: tempo
     access: grafanet
     url: http://tempo:3200
-    serviceMap:
-      datasourceUid: 'Mimir'
+    jsonData:
+      nodeGraph:
+        enabled: true
+      serviceMap:
+        datasourceUid: 'mimir'
+      lokiSearch:
+        datasourceUid: 'loki'
+      tracesToLogsV2:
+        datasourceUid: loki
+        filterByTraceID: false
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        # tags: ['job', 'instance', 'pod', 'namespace']
+        customQuery: true
+        query: '{job="$${__span.tags["service.name"]}"}'
+      tracesToMetrics:
+        datasourceUid: 'mimir'
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+      traceQuery:
+        timeShiftEnabled: true
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'

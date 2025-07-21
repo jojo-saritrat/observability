@@ -7,119 +7,79 @@ livedebugging {
 	enabled = true
 }
 
-
 otelcol.receiver.otlp "otlp" {
-  grpc {
-    endpoint = "0.0.0.0:4317"
-  }
-  http {
-    endpoint = "0.0.0.0:4318"
-  }
+	grpc {
+		endpoint = "0.0.0.0:4317"
+	}
 
-  output {
-    logs   = [otelcol.processor.batch.default.input]
-    traces = [otelcol.processor.batch.default.input]
-    metrics = [otelcol.processor.batch.default.input]
-  }
+	http {
+		endpoint = "0.0.0.0:4318"
+	}
+
+	output {
+		logs    = [otelcol.processor.batch.default.input]
+		traces  = [otelcol.processor.batch.default.input, otelcol.connector.servicegraph.tracemetrics.input]
+		metrics = [otelcol.processor.batch.default.input]
+	}
 }
 
 otelcol.processor.batch "default" {
-  output {
-    logs    = [otelcol.exporter.otlp.loki.input]
-    traces  = [otelcol.exporter.otlp.tempo.input]
-    metrics = [otelcol.exporter.otlp.mimir.input]
-  }
-}
-
-local.file_match "node_logs" {
-	path_targets = [{
-		__path__ = "/tmp/logs/*.log",
-	}]
-}
-
-// --------------------------------------------  Sources
-// Loki source for file-based logs
-loki.source.file "node_logs" {
-	targets    = local.file_match.node_logs.targets
-	forward_to = [loki.process.filter_logs.receiver]
-	// forward_to   = [loki.relabel.router.receiver]
-	tail_from_end = true
-}
-
-//
-// --------------------------------------------  Processors
-// Loki process for filtering logs
-loki.process "filter_logs" {
-
-	stage.json {
-		expressions = {
-			"level"   = "level",
-			"message" = "msg",
-		} // สร้าง fields level และ msg จาก log ที่ได้
+	output {
+		logs    = [otelcol.exporter.loki.default.input]
+		traces  = [otelcol.exporter.otlp.tempo.input]
+		metrics  = [otelcol.exporter.prometheus.default.input]
 	}
-
-	stage.labels {
-		values = {
-			"level"   = "level",
-			"message" = "message",
-		}
-	}
-
-	stage.structured_metadata {
-		values = {
-			level = "level",
-			msg   = "message",
-		}
-	}
-
-	stage.output {
-		source = "message"
-	}
-
-	forward_to = [loki.write.grafana_loki.receiver]
 }
 
-prometheus.scrape "node_exporter" {
-  targets = [{
-    "__address__" = "localhost:8080",
-  }]
-  forward_to = [prometheus.remote_write.mimir.receiver]
-}
+// The Servicegraph Connector will generate service graph metrics (edges and nodes) based on incoming trace spans.
+otelcol.connector.servicegraph "tracemetrics" {
+    // Extra dimensions (metrics labels) to be added to the generated metrics from matching span attributes.
+    // For this component, this is defined as an array. There are no default values and the labels will not be generated
+    // for missing span attributes.
+    dimensions = [
+        "http.method",
+        "http.target",
+        "http.status_code",
+        "service.version",
+    ]
 
+    // Generated metrics data is in OTLP format. We send this data to the OpenTelemetry Prometheus exporter to ensure
+    // it gets transformed into Prometheus format data.
+    output {
+        metrics = [otelcol.exporter.prometheus.default.input]
+    }
+}
 
 otelcol.exporter.otlp "tempo" {
-  client {
-    endpoint = "tempo:4317"
-    tls { insecure = true }
-  }
-}
-prometheus.remote_write "mimir" {
-  endpoint { url = "http://mimir:9009/api/v1/write" }
+	client {
+		endpoint = "tempo:4317"
+
+		tls {
+			insecure             = true
+			insecure_skip_verify = true
+		}
+	}
 }
 
-
-otelcol.exporter.otlp "loki" {
-  client {
-    endpoint = "loki:3100"
-    tls {
-      insecure = true
-    }
-  }
+otelcol.exporter.loki "default" {
+  forward_to = [loki.write.loki.receiver]
 }
-otelcol.exporter.otlp "mimir" {
-  client {
-    endpoint = "mimir:9009"
-    tls {
-      insecure = true
-    }
-  }
-}
-
 
 // --------------------------------------------   Exporters
 // Loki write to Grafana Loki
-loki.write "grafana_loki" {
+loki.write "loki" {
 	endpoint {
 		url = "http://loki:3100/loki/api/v1/push"
 	}
+}
+
+otelcol.exporter.prometheus "default" {
+  forward_to = [prometheus.remote_write.mimir.receiver]
+}
+
+prometheus.remote_write "mimir" {
+  // Send metrics to a Mimir instance
+  endpoint {
+    url = "http://mimir:9009/api/v1/push"
+  }
 }

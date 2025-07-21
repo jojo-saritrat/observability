@@ -1,3 +1,4 @@
 {"level":"error", "service":"auth", "msg":"Login failed"}
 {"level":"info", "service":"auth", "msg":"Login susccess"}
-{"level":"error", "service":"auth", "msg":"Login failed"}
+{"level":"info", "service":"auth", "msg":"Login susccess"}
+{"level":"info", "service":"auth", "msg":"Request Success"}
