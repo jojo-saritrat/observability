@@ -1,5 +1,4 @@
-
-# Grafanet Loki and Alloy Setup
+# Alloy Setup for Log
 
 This repository helps you set up Grafanet and run a Grafana Alloy container to handle your configurations and data.
 
