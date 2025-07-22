@@ -1,4 +1,4 @@
-# Alloy Setup for Log
+# Alloy Setup for Logs
 
 This repository helps you set up Grafanet and run a Grafana Alloy container to handle your configurations and data.
 

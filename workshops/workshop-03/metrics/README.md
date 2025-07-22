@@ -1,4 +1,4 @@
-# Alloy Setup for Metric
+# Alloy Setup for Metrics
 
 This repository helps you set up Grafanet and run a Grafana Alloy container to handle your configurations and data.
 
