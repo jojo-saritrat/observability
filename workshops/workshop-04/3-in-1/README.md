@@ -1,3 +1,20 @@
+# Grafana Alloy x LGTM Observability Workshop
+
+Welcome to the **Grafana Alloy x LGTM Observability Workshop**!  
+This workshop is designed to help you understand how to collect, process, and visualize telemetry signals — **logs**, **metrics**, and **traces** — using the **LGTM Stack** and **Grafana Alloy**.
+
+With just a few Docker commands, you’ll spin up a full observability lab that includes:
+
+- A 3-in-1 sample app instrumented with OpenTelemetry
+- Grafana Alloy to collect and forward telemetry signals
+- LGTM Stack (Loki, Grafana, Tempo, Mimir) for visualization and storage
+- Postman collection for easy testing
+
+This guide is great for developers, SREs, or platform engineers looking to explore modern observability stacks without the need for a Kubernetes cluster.
+
+Let’s get you observing in minutes — enjoy the hands-on experience! 
+
+
 ## Prerequisite
 ```bash
 docker network create grafanet
