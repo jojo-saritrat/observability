@@ -1,47 +1,84 @@
+logging {
+	level  = "info"
+	format = "logfmt"
+}
+
 livedebugging {
-  enabled = true
+	enabled = true
 }
 
 otelcol.receiver.otlp "otlp" {
-  grpc {
-    endpoint = "0.0.0.0:4317"
-  }
-  http {
-    endpoint = "0.0.0.0:4318"
-  }
+	grpc {
+		endpoint = "0.0.0.0:4317"
+	}
 
-  output {
-    logs   = [otelcol.processor.batch.default.input]
-    traces = [otelcol.processor.batch.default.input]
-  }
+	http {
+		endpoint = "0.0.0.0:4318"
+	}
+
+	output {
+		logs    = [otelcol.processor.batch.default.input]
+		traces  = [otelcol.processor.batch.default.input, otelcol.connector.servicegraph.tracemetrics.input]
+		metrics = [otelcol.processor.batch.default.input]
+	}
 }
 
 otelcol.processor.batch "default" {
-  output {
-    logs    = [otelcol.exporter.otlp.loki.input]
-    traces  = [otelcol.exporter.otlp.tempo.input]
-  }
+	output {
+		logs    = [otelcol.exporter.loki.default.input]
+		traces  = [otelcol.exporter.otlp.tempo.input]
+		metrics  = [otelcol.exporter.prometheus.default.input]
+	}
 }
 
-otelcol.exporter.otlp "loki" {
-  client {
-    endpoint = "loki:3100"
-    tls {
-      insecure = true
+// The Servicegraph Connector will generate service graph metrics (edges and nodes) based on incoming trace spans.
+otelcol.connector.servicegraph "tracemetrics" {
+    // Extra dimensions (metrics labels) to be added to the generated metrics from matching span attributes.
+    // For this component, this is defined as an array. There are no default values and the labels will not be generated
+    // for missing span attributes.
+    dimensions = [
+        "http.method",
+        "http.target",
+        "http.status_code",
+        "service.version",
+    ]
+
+    // Generated metrics data is in OTLP format. We send this data to the OpenTelemetry Prometheus exporter to ensure
+    // it gets transformed into Prometheus format data.
+    output {
+        metrics = [otelcol.exporter.prometheus.default.input]
     }
-  }
 }
 
 otelcol.exporter.otlp "tempo" {
-  client {
-    endpoint = "tempo:4317"
-    tls {
-      insecure = true
-    }
-  }
+	client {
+		endpoint = "tempo:4317"
+
+		tls {
+			insecure             = true
+			insecure_skip_verify = true
+		}
+	}
+}
+
+otelcol.exporter.loki "default" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+// --------------------------------------------   Exporters
+// Loki write to Grafana Loki
+loki.write "loki" {
+	endpoint {
+		url = "http://loki:3100/loki/api/v1/push"
+	}
+}
+
+otelcol.exporter.prometheus "default" {
+  forward_to = [prometheus.remote_write.mimir.receiver]
 }
 
 prometheus.remote_write "mimir" {
+  // Send metrics to a Mimir instance
   endpoint {
     url = "http://mimir:9009/api/v1/push"
   }

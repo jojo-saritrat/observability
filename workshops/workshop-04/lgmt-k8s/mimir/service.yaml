@@ -9,4 +9,4 @@ spec:
     - name: http
       port: 9009
       targetPort: 9009
-  type: LoadBalancer
+  type: ClusterIP

@@ -30,10 +30,7 @@ This guide provides step-by-step instructions to deploy the monitoring stack usi
 Create individual namespaces for each component:
 
 ```bash
-kubectl create namespace grafana
-kubectl create namespace loki
-kubectl create namespace mimir
-kubectl create namespace alloy
+kubectl create namespace lgmt
 ```
 
 ---

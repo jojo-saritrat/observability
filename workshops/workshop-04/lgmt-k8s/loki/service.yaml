@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: loki
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: loki
   ports:

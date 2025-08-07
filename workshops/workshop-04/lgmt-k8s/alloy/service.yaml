@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: alloy
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: alloy
   ports:

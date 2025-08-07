@@ -1,7 +1,7 @@
 {
-  "name": "nodejs",
+  "name": "app",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -9,20 +9,18 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
-  "description": "",
+  "description": "npm install",
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/exporter-logs-otlp-http": "^0.203.0",
     "@opentelemetry/exporter-metrics-otlp-http": "^0.203.0",
-    "@opentelemetry/exporter-prometheus": "^0.203.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.203.0",
     "@opentelemetry/instrumentation-express": "^0.52.0",
     "@opentelemetry/instrumentation-http": "^0.203.0",
     "@opentelemetry/instrumentation-pino": "^0.50.0",
-    "@opentelemetry/sdk-logs": "^0.203.0",
-    "@opentelemetry/sdk-metrics": "^2.0.1",
     "@opentelemetry/sdk-node": "^0.203.0",
     "express": "^5.1.0",
     "pino": "^9.7.0"
-  }
+  },
+  "devDependencies": {}
 }

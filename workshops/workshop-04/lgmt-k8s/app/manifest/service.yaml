@@ -8,8 +8,8 @@ spec:
     app: observability
   ports:
     - name: app
-      port: 3031
-      targetPort: 3031
+      port: 8080
+      targetPort: 8080
     - name: otlp
       port: 4318
       targetPort: 4318

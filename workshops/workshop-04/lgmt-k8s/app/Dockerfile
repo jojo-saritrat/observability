@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # Your app binds to port 3000
-EXPOSE 3031
+EXPOSE 8080
 
 # Define the command to run your app
 CMD [ "node", "--require", "./instrumentation.js", "app.js" ]

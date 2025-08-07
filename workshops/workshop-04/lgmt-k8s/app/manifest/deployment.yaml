@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: observability
-          image: anonja/observability:1.0.0
+          image: anonja/observability:1.0.1
           ports:
-            - containerPort: 3031
+            - containerPort: 8080
             - containerPort: 4318
